@@ -7,7 +7,7 @@
 //
 
 import SwiftUI
-import KeyboardKitPro
+import KeyboardKit
 
 /// This is the KeyboardKit demo app.
 ///
@@ -34,10 +34,9 @@ import KeyboardKitPro
 struct DemoApp: App {
     
     var body: some Scene {
-        WindowGroup {
-            KeyboardAppView(for: .keyboardKitDemo) {
-                HomeScreen()
-            }
-        }
-    }
+              WindowGroup {
+                  HomeScreen()
+                      .environmentObject(KeyboardContext())
+              }
+          }
 }

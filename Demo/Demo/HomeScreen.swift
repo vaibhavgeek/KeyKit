@@ -6,7 +6,7 @@
 //  Copyright © 2021-2025 Daniel Saidi. All rights reserved.
 //
 
-import KeyboardKitPro
+import KeyboardKit
 import SwiftUI
 
 /// This is the main demo app screen.
@@ -27,69 +27,36 @@ struct HomeScreen: View {
     @State var textWebSearch = ""
 
     @Environment(\.openURL) var openURL
-
-    @EnvironmentObject var dictationContext: DictationContext
+    
     @EnvironmentObject var keyboardContext: KeyboardContext
-    @EnvironmentObject var themeContext: KeyboardThemeContext
 
     var body: some View {
-        NavigationView {
-            KeyboardApp.HomeScreen(
-                app: app,
-                appIcon: Image(.icon),
-                header: {},
-                footer: {
-                    Section("Section.TextFields") {
-                        TextField("TextField.Plain", text: $text)
-                            .keyboardType(.default)
-                        TextField("TextField.Email", text: $textEmail)
-                            .keyboardType(.emailAddress)
-                        TextField("TextField.URL", text: $textURL)
-                            .keyboardType(.URL)
-                        TextField("TextField.WebSearch", text: $textWebSearch)
-                            .keyboardType(.webSearch)
-                    }
-                }
-            )
-            .navigationTitle(app.name)
-        }
-        .keyboardAppHomeScreenLocalization(.init(
-            keyboardSectionFooter: "OBS! This demo isn't code signed and therefore can't sync settings to its keyboard extensions!"
-        ))
-        .keyboardAppHomeScreenStyle(.init(
-            appIconSize: 120
-        ))
-        .keyboardAppHomeScreenVisibility(.init(
-            keyboardSection: true,
-            keyboardSectionThemeSettings: true
-        ))
-        .keyboardDictation(
-            dictationContext: dictationContext,
-            keyboardContext: keyboardContext,
-            openUrl: openURL,
-            speechRecognizer: .standard,
-            overlay: dictationScreen
-        )
-        .navigationViewStyle(.stack)
-    }
-}
+              NavigationView {
+                  Form {
+                      Section {
+                          Image(.icon)
+                              .resizable()
+                              .aspectRatio(contentMode: .fit)
+                              .frame(width: 120, height: 120)
+                              .cornerRadius(20)
+                              .frame(maxWidth: .infinity)
+                      }
+                      .listRowBackground(Color.clear)
+                      
 
-extension HomeScreen {
-    
-    func dictationScreen() -> some View {
-        Dictation.Screen(
-            dictationContext: dictationContext,
-            titleView: { EmptyView() },
-            visualizer: { Dictation.BarVisualizer(isAnimating: $0) },
-            doneButton: { action in
-                Button("Button.Done", action: action)
-                    .buttonStyle(.borderedProminent)
-            }
-        )
-    }
-}
-
-#Preview {
-    
-    HomeScreen()
+                      Section("Text Fields") {
+                          TextField("Plain Text", text: $text)
+                              .keyboardType(.default)
+                          TextField("Email", text: $textEmail)
+                              .keyboardType(.emailAddress)
+                          TextField("URL", text: $textURL)
+                              .keyboardType(.URL)
+                          TextField("Web Search", text: $textWebSearch)
+                              .keyboardType(.webSearch)
+                      }
+                  }
+                  .navigationTitle(app.name)
+              }
+              .navigationViewStyle(.stack)
+          }
 }
