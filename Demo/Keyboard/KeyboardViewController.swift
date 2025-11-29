@@ -65,7 +65,7 @@ class KeyboardViewController: KeyboardInputViewController {
                     Keyboard.Toolbar {
                         HStack {
                             Spacer()
-                            Text("Autocomplete can be tested in the Pro demo.")
+                            Text("Testing custom keyboard!")
                             Spacer()
                         }
                     }

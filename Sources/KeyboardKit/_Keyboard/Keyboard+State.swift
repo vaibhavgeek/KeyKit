@@ -43,6 +43,9 @@ public extension Keyboard {
 
         /// The keyboard theme context to use.
         public lazy var themeContext = KeyboardThemeContext()
+
+        /// The swipe context to use.
+        public lazy var swipeContext = SwipeContext()
     }
 }
 
@@ -78,5 +81,6 @@ public extension View {
             .environmentObject(state.feedbackContext)
             .environmentObject(state.keyboardContext)
             .environmentObject(state.themeContext)
+            .environmentObject(state.swipeContext)
     }
 }

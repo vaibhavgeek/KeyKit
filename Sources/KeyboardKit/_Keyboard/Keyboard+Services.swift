@@ -100,6 +100,9 @@ public extension Keyboard {
             action: { _ in }
         )
 
+        /// The swipe gesture handler to use.
+        public var swipeGestureHandler: Gestures.SwipeGestureHandler?
+
         /// The keyboard style service to use.
         public lazy var styleService: KeyboardStyleService = .standard(
             keyboardContext: state.keyboardContext
