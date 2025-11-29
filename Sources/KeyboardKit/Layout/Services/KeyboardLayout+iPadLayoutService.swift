@@ -169,23 +169,22 @@ extension KeyboardLayout.iPadLayoutService {
 
 
 #Preview {
-    
-    func layout() -> KeyboardLayout {
-        KeyboardLayout.iPadLayoutService(
-            alphabeticInputSet: .qwerty,
-            numericInputSet: .numeric(currency: "$"),
-            symbolicInputSet: .symbolic(currencies: [""])
-        )
-        .keyboardLayout(for: .preview)
-    }
-    
-    return KeyboardView(
-        layout: layout(),
+    let layout = KeyboardLayout.iPadLayoutService(
+        alphabeticInputSet: .qwerty,
+        numericInputSet: .numeric(currency: "$"),
+        symbolicInputSet: .symbolic(currencies: [""])
+    )
+    .keyboardLayout(for: .preview)
+
+    KeyboardView(
+        layout: layout,
         actionHandler: .preview,
         styleService: .preview,
+        services: .preview,
         keyboardContext: .preview,
         autocompleteContext: .preview,
         calloutContext: .preview,
+        swipeContext: SwipeContext(),
         buttonContent: { $0.view },
         buttonView: { $0.view },
         collapsedView: { $0.view },

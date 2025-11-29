@@ -63,9 +63,11 @@ public struct KeyboardView<
             actionHandler: services.actionHandler,
             repeatTimer: services.repeatGestureTimer,
             styleService: services.styleService,
+            services: services,
             keyboardContext: state.keyboardContext,
             autocompleteContext: state.autocompleteContext,
             calloutContext: state.calloutContext,
+            swipeContext: state.swipeContext,
             renderBackground: renderBackground,
             buttonContent: buttonContent,
             buttonView: buttonView,
@@ -82,9 +84,11 @@ public struct KeyboardView<
     ///   - actionHandler: The action handler to use.
     ///   - repeatTimer: The repeat gesture timer to use, if any.
     ///   - styleService: The style service to use.
+    ///   - services: The keyboard services to use.
     ///   - keyboardContext: The keyboard context to use.
     ///   - autocompleteContext: The autocomplete context to use.
     ///   - calloutContext: The callout context to use.
+    ///   - swipeContext: The swipe context to use.
     ///   - renderBackground: Whether to render the style background.
     ///   - buttonContent: The content view to use for buttons.
     ///   - buttonView: The button view to use for an buttons.
@@ -96,9 +100,11 @@ public struct KeyboardView<
         actionHandler: KeyboardActionHandler,
         repeatTimer: GestureButtonTimer? = nil,
         styleService: KeyboardStyleService,
+        services: Keyboard.Services,
         keyboardContext: KeyboardContext,
         autocompleteContext: AutocompleteContext,
         calloutContext: KeyboardCalloutContext,
+        swipeContext: SwipeContext,
         renderBackground: Bool? = nil,
         @ViewBuilder buttonContent: @escaping ButtonContentBuilder,
         @ViewBuilder buttonView: @escaping ButtonViewBuilder,
@@ -121,6 +127,7 @@ public struct KeyboardView<
         self.actionHandler = actionHandler
         self.repeatTimer = repeatTimer
         self.styleService = styleService
+        self.services = services
         self.renderBackground = renderBackground ?? true
         self.buttonContentBuilder = buttonContent
         self.buttonViewBuilder = buttonView
@@ -131,6 +138,7 @@ public struct KeyboardView<
         _autocompleteContext = .init(wrappedValue: autocompleteContext)
         _calloutContext = .init(wrappedValue: calloutContext)
         _keyboardContext = .init(wrappedValue: keyboardContext)
+        _swipeContext = .init(wrappedValue: swipeContext)
     }
 
     private let actionHandler: KeyboardActionHandler
@@ -138,6 +146,7 @@ public struct KeyboardView<
     private let rawLayout: KeyboardLayout
     private let layoutConfig: KeyboardLayout.Configuration
     private let styleService: KeyboardStyleService
+    private let services: Keyboard.Services
     private let renderBackground: Bool
 
     private let buttonContentBuilder: ButtonContentBuilder
@@ -161,6 +170,9 @@ public struct KeyboardView<
     @ObservedObject var autocompleteContext: AutocompleteContext
     @ObservedObject var calloutContext: KeyboardCalloutContext
     @ObservedObject var keyboardContext: KeyboardContext
+    @ObservedObject var swipeContext: SwipeContext
+
+    @State private var swipeGestureHandler: Gestures.SwipeGestureHandler?
 
     public var body: some View {
         if keyboardContext.isKeyboardCollapsed {
@@ -325,6 +337,16 @@ private extension KeyboardView {
                                     inputWidth: inputWidth,
                                     isGestureAutoCancellable: row.offset == 0
                                 )
+                                .background(
+                                    GeometryReader { keyGeo in
+                                        Color.clear.onAppear {
+                                            if case .character(let char) = item.element.action {
+                                                let frame = keyGeo.frame(in: .named("SwipeCoordinateSpace"))
+                                                swipeContext.keyBounds[char] = frame
+                                            }
+                                        }
+                                    }
+                                )
                             }
                         }
                     }
@@ -336,6 +358,38 @@ private extension KeyboardView {
             .frame(maxWidth: .infinity, alignment: keyboardAlignment)
         }
         .frame(height: layout.totalHeight)
+        .coordinateSpace(name: "SwipeCoordinateSpace")
+        .overlay(Gestures.SwipePathView(swipeContext: swipeContext))
+        .overlay(
+            GeometryReader { _ in
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 20, coordinateSpace: .named("SwipeCoordinateSpace"))
+                            .onChanged { value in
+                                #if os(iOS) || os(tvOS) || os(visionOS)
+                                if swipeGestureHandler == nil {
+                                    swipeGestureHandler = Gestures.SwipeGestureHandler(
+                                        swipeContext: swipeContext,
+                                        keyboardContext: keyboardContext,
+                                        actionHandler: actionHandler
+                                    )
+                                }
+                                if !swipeContext.isSwiping {
+                                    swipeGestureHandler?.handleSwipeStart(value.location)
+                                } else {
+                                    swipeGestureHandler?.handleSwipeChanged(value.location)
+                                }
+                                #endif
+                            }
+                            .onEnded { value in
+                                #if os(iOS) || os(tvOS) || os(visionOS)
+                                swipeGestureHandler?.handleSwipeEnded(value.location)
+                                #endif
+                            }
+                    )
+            }
+        )
     }
     
     func keyboardWidth(for totalWidth: Double) -> Double {
